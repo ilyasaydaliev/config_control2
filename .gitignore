@@ -1,0 +1,25 @@
+# Игнорируются служебные файлы Python, артефакты сборки и результаты.
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+
+# IDE
+.idea/
+.run/
+.stage_versions/
+
+# Локальный бинарник рендера D2 (не хранится в git, скачивается)
+tools/d2.exe
+
+# Сгенерированные результаты запуска в корне репозитория
+output/
+/graph.png
+/graph.d2
+
+# ОС
+Thumbs.db
+.DS_Store
