@@ -11,6 +11,7 @@ import xml.etree.ElementTree as ET
 
 CONFIG_ROOT = "configuration"
 REQUIRED_KEYS = ("package_name", "repo_url", "test_mode", "output_image")
+VERSION_KEY = "package_version"
 
 
 class ConfigError(Exception):
@@ -20,20 +21,27 @@ class ConfigError(Exception):
 class AppConfig:
     """Хранит пользовательские параметры приложения."""
 
-    def __init__(self, package_name, repo_url, test_mode, output_image):
+    def __init__(
+        self, package_name, repo_url, test_mode, output_image,
+        package_version=None,
+    ):
         self.package_name = package_name
         self.repo_url = repo_url
         self.test_mode = test_mode
         self.output_image = output_image
+        self.package_version = package_version
 
     def as_pairs(self):
         """Вернуть параметры в виде пар ключ-значение для отображения."""
-        return [
+        pairs = [
             ("package_name", self.package_name),
             ("repo_url", self.repo_url),
             ("test_mode", str(self.test_mode).lower()),
             ("output_image", self.output_image),
         ]
+        if self.package_version is not None:
+            pairs.append((VERSION_KEY, self.package_version))
+        return pairs
 
 
 def parse_bool(text, key):
@@ -84,10 +92,16 @@ def load_config(path):
             raise ConfigError("параметр '{}': отсутствует в конфигурации".format(key))
         values[key] = _require_text(element, key)
 
+    version = None
+    version_element = root.find(VERSION_KEY)
+    if version_element is not None:
+        version = _require_text(version_element, VERSION_KEY)
+
     test_mode = parse_bool(values["test_mode"], "test_mode")
     return AppConfig(
         package_name=values["package_name"],
         repo_url=values["repo_url"],
         test_mode=test_mode,
         output_image=values["output_image"],
+        package_version=version,
     )

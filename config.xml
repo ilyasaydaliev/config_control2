@@ -3,5 +3,6 @@
     <package_name>org.apache.commons:commons-lang3</package_name>
     <repo_url>https://repo1.maven.org/maven2/</repo_url>
     <test_mode>false</test_mode>
+    <package_version>3.14.0</package_version>
     <output_image>graph.png</output_image>
 </configuration>

@@ -8,7 +8,8 @@ import argparse
 import os
 
 from depviz16.config import AppConfig, ConfigError, load_config
-from depviz16.output import print_config
+from depviz16.maven import MavenError, get_direct_dependencies
+from depviz16.output import print_config, print_direct_dependencies
 
 
 class CliError(Exception):
@@ -19,8 +20,20 @@ def run(config):
     """Выполнить основной сценарий приложения.
 
     Этап 1: вывод всех настраиваемых параметров в формате ключ-значение.
+    Этап 2: вывод всех прямых зависимостей заданного пакета.
     """
     print_config(config)
+    try:
+        deps = get_direct_dependencies(
+            config.package_name,
+            config.repo_url,
+            config.test_mode,
+            config.package_version,
+        )
+    except MavenError as error:
+        print("Ошибка: {}".format(error))
+        return 1
+    print_direct_dependencies(config.package_name, deps)
     return 0
 
 

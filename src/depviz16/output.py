@@ -10,3 +10,13 @@ def print_config(config):
     print("Конфигурация:")
     for key, value in config.as_pairs():
         print("  {}: {}".format(key, value))
+
+
+def print_direct_dependencies(package, deps):
+    """Вывести список прямых зависимостей пакета (этап 2)."""
+    print("Прямые зависимости '{}':".format(package))
+    if not deps:
+        print("  (нет зависимостей)")
+        return
+    for dep in deps:
+        print("  {}".format(dep))

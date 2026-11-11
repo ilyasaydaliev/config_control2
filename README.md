@@ -1,7 +1,33 @@
 # depviz16 — визуализация графа зависимостей Maven
 
 Учебный проект по дисциплине «Конфигурационное управление» (ПР №2,
-вариант №16). Этап 1: минимальный прототип CLI с XML-конфигурацией.
+вариант №16): CLI-инструмент, который извлекает зависимости пакетов
+Java (формат Maven) и готовит данные для визуализации графа.
+
+Готовые средства (менеджеры пакетов, библиотеки) для получения
+зависимостей не используются: pom.xml загружается средствами
+`urllib` и разбирается стандартным `xml.etree`.
+
+## Общее описание
+
+Приложение читает конфигурацию из XML-файла, выводит параметры в формате
+ключ-значение и собирает прямые зависимости заданного пакета Maven.
+
+Структура репозитория:
+
+```
+src/depviz16/          исходный код
+  __init__.py          пакет приложения
+  __main__.py          точка входа
+  cli.py               разбор аргументов, сценарий запуска
+  config.py            XML-конфигурация приложения
+  maven.py             получение зависимостей из pom.xml
+  output.py            функции вывода
+tests/                 модульные тесты (unittest)
+examples/              локальный файловый репозиторий Maven
+config.xml             конфигурация по умолчанию (Maven Central)
+config.local.xml       конфигурация локального репозитория
+```
 
 ## Этап 1. Минимальный прототип с конфигурацией
 
@@ -19,24 +45,31 @@
   ключ-значение;
 * обработка ошибок для всех параметров: файл не найден, ошибка
   XML-синтаксиса, пропущенный ключ, пустое значение, неверное булево
-  `test_mode` — с кодом возврата 2;
-* файлы `config.xml`, `config.test.xml`, `testrepo.txt`;
-* тесты `tests/test_config.py` (15 тестов).
+  `test_mode` — с кодом возврата 2.
 
-### Структура репозитория
+## Этап 2. Сбор данных
+
+### Нововведения этапа
+
+* модуль `maven.py`: загрузка pom.xml по URL из репозитория
+  (`urllib.request`, без менеджеров пакетов и сторонних библиотек);
+* разбор `<dependencies>` и `<dependencyManagement>` с учётом пространства
+  имён Maven POM (координаты `groupId:artifactId`);
+* поддержка локального файлового репозитория Maven: `repo_url` может
+  указывать на папку с pom-файлами вместо URL;
+* вывод всех прямых зависимостей заданного пакета на экран;
+* пример локального репозитория: `examples/local_repo/`.
+
+### Структура локального репозитория
 
 ```
-src/depviz16/          исходный код
-  __init__.py          пакет приложения
-  __main__.py          точка входа
-  cli.py               разбор аргументов, сценарий запуска
-  config.py            XML-конфигурация приложения
-  output.py            функции вывода
-tests/                 модульные тесты (unittest)
-  fixtures/            XML-фикстуры для тестов конфигурации
-config.xml             конфигурация по умолчанию (Maven Central)
-config.test.xml        конфигурация тестового репозитория
-testrepo.txt           файл описания тестового графа
+examples/local_repo/
+  com/example/demo-app/pom.xml              com.example:demo-app
+  com/google/guava/guava/pom.xml            com.google.guava:guava
+  com/google/guava/failureaccess/pom.xml    com.google.guava:failureaccess
+  junit/junit/pom.xml                       junit:junit
+  org/apache/commons/commons-lang3/pom.xml  org.apache.commons:commons-lang3
+  org/hamcrest/hamcrest-core/pom.xml        org.hamcrest:hamcrest-core
 ```
 
 ### Запуск
@@ -44,8 +77,11 @@ testrepo.txt           файл описания тестового графа
 Требуется Python 3.10+ (тестировалось на 3.13). Внешних зависимостей нет.
 
 ```bash
-# вывод параметров конфигурации (этап 1)
+# параметры конфигурации (этап 1)
 PYTHONPATH=src python src/depviz16/__main__.py --config config.xml
+
+# прямые зависимости (этап 2) — из локального репозитория
+PYTHONPATH=src python src/depviz16/__main__.py --config config.local.xml
 
 # тесты
 PYTHONPATH=src python -m unittest discover -s tests -v
@@ -57,13 +93,13 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 ### Примеры
 
 ```console
-$ PYTHONPATH=src python src/depviz16/__main__.py --config config.xml
+$ PYTHONPATH=src python src/depviz16/__main__.py --config config.local.xml
 Конфигурация:
-  package_name: org.apache.commons:commons-lang3
-  repo_url: https://repo1.maven.org/maven2/
+  package_name: com.example:demo-app
+  repo_url: examples/local_repo
   test_mode: false
   output_image: graph.png
-
-$ PYTHONPATH=src python src/depviz16/__main__.py --config nope.xml
-Ошибка: файл конфигурации 'nope.xml' не найден   (код возврата 2)
+Прямые зависимости 'com.example:demo-app':
+  com.google.guava:guava
+  org.apache.commons:commons-lang3
 ```

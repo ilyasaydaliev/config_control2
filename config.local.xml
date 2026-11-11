@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <package_name>com.example:demo-app</package_name>
+    <repo_url>examples/local_repo</repo_url>
+    <test_mode>false</test_mode>
+    <output_image>graph.png</output_image>
+</configuration>
