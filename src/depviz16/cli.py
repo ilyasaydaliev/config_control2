@@ -8,12 +8,33 @@ import argparse
 import os
 
 from depviz16.config import AppConfig, ConfigError, load_config
-from depviz16.maven import MavenError, get_direct_dependencies
-from depviz16.output import print_config, print_direct_dependencies
+from depviz16.graph import (
+    GraphError,
+    build_repository_graph,
+    build_test_graph,
+)
+from depviz16.maven import MavenError
+from depviz16.output import (
+    print_config,
+    print_cycles,
+    print_direct_dependencies,
+    print_graph,
+)
 
 
 class CliError(Exception):
     """Ошибка разбора аргументов командной строки."""
+
+
+def build_graph(config):
+    """Построить граф зависимостей с учётом режима тестирования."""
+    if config.test_mode:
+        return build_test_graph(config.package_name, config.repo_url)
+    return build_repository_graph(
+        config.package_name,
+        config.repo_url,
+        config.package_version,
+    )
 
 
 def run(config):
@@ -21,19 +42,20 @@ def run(config):
 
     Этап 1: вывод всех настраиваемых параметров в формате ключ-значение.
     Этап 2: вывод всех прямых зависимостей заданного пакета.
+    Этап 3: построение графа зависимостей обходом DFS без рекурсии,
+    поиск циклов и вывод порядка обхода.
     """
     print_config(config)
     try:
-        deps = get_direct_dependencies(
-            config.package_name,
-            config.repo_url,
-            config.test_mode,
-            config.package_version,
-        )
-    except MavenError as error:
+        graph = build_graph(config)
+    except (GraphError, MavenError) as error:
         print("Ошибка: {}".format(error))
         return 1
-    print_direct_dependencies(config.package_name, deps)
+    print_direct_dependencies(
+        config.package_name, graph.adjacency[config.package_name]
+    )
+    print_graph(graph)
+    print_cycles(graph)
     return 0
 
 

@@ -60,7 +60,9 @@ def _require_text(element, key):
     """Проверить наличие текста в элементе конфигурации."""
     text = element.text.strip() if element is not None and element.text else ""
     if not text:
-        raise ConfigError("параметр '{}': значение отсутствует или пустое".format(key))
+        raise ConfigError(
+            "параметр '{}': значение отсутствует или пустое".format(key)
+        )
     return text
 
 
@@ -89,7 +91,9 @@ def load_config(path):
     for key in REQUIRED_KEYS:
         element = root.find(key)
         if element is None:
-            raise ConfigError("параметр '{}': отсутствует в конфигурации".format(key))
+            raise ConfigError(
+                "параметр '{}': отсутствует в конфигурации".format(key)
+            )
         values[key] = _require_text(element, key)
 
     version = None

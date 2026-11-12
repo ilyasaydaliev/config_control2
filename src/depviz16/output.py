@@ -20,3 +20,30 @@ def print_direct_dependencies(package, deps):
         return
     for dep in deps:
         print("  {}".format(dep))
+
+
+def print_graph(graph):
+    """Вывести граф зависимостей и порядок обхода DFS (этап 3)."""
+    print("Граф зависимостей '{}':".format(graph.root))
+    print("  пакетов: {}".format(len(graph.nodes())))
+    print("  связей: {}".format(len(graph.edges())))
+    print(
+        "  порядок обхода DFS: {}".format(" -> ".join(graph.order))
+    )
+    print("  зависимости:")
+    for node in graph.order:
+        deps = graph.adjacency[node]
+        if deps:
+            print("    {} -> {}".format(node, ", ".join(deps)))
+        else:
+            print("    {} -> (нет)".format(node))
+
+
+def print_cycles(graph):
+    """Вывести найденные циклические зависимости (этап 3)."""
+    print("Циклические зависимости:")
+    if not graph.cycles:
+        print("  не обнаружены")
+        return
+    for cycle in graph.cycles:
+        print("  {}".format(" -> ".join(cycle)))

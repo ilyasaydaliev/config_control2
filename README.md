@@ -103,3 +103,103 @@ $ PYTHONPATH=src python src/depviz16/__main__.py --config config.local.xml
   com.google.guava:guava
   org.apache.commons:commons-lang3
 ```
+
+## Этап 3. Основные операции
+
+### Нововведения этапа
+
+* модуль `graph.py`: построение графа зависимостей с учётом
+  транзитивности обходом в глубину **без рекурсии** (явный стек);
+* корректная обработка циклических зависимостей: итеративный DFS
+  раскрашивает вершины в белый/серый/чёрный цвета, находит обратные
+  рёбра и восстанавливает цикл по дереву обхода. Найденный цикл
+  гарантирует отсутствие зацикливания обхода; на одну циклическую
+  компоненту выводится один цикл (обратное ребро), а не все простые
+  циклы;
+* режим тестирования: при `test_mode=true` параметр `repo_url`
+  указывает на файл описания графа, пакеты в котором названы большими
+  латинскими буквами (`A`, `B`, `HTTP2` и т. п.);
+* вывод графа: количество пакетов и связей, порядок обхода DFS,
+  прямые зависимости каждого пакета и найденные циклы.
+
+### Формат файла описания графа
+
+В каждой строке сначала имя пакета, затем его прямые зависимости через
+пробелы, запятые, двоеточие или стрелку `->`. Пустые строки и текст
+после `#` игнорируются. Пакет, упомянутый только как зависимость,
+считается листом.
+
+```
+# Цикл A -> B -> C -> A и ответвление A -> D
+A -> B, D
+B -> C
+C -> A
+```
+
+### Примеры тестовых графов
+
+```
+examples/test_graphs/
+  chain.txt            линейная цепочка A -> B -> C -> D
+  diamond.txt          ромб без цикла, узел D общий
+  cycle.txt            цикл A -> B -> C -> A и лист D
+  self_cycle.txt       петля A -> A и цепочка до C
+  mixed.txt            два независимых цикла A <-> B и C <-> D
+  config.*.xml         конфигурации для запуска каждого случая
+```
+
+### Запуск этапа 3
+
+```bash
+# линейная цепочка
+PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.chain.xml
+
+# ромб (повторное посещение D не дублируется)
+PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.diamond.xml
+
+# цикл A -> B -> C -> A
+PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.cycle.xml
+
+# петля A -> A
+PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.self_cycle.xml
+
+# два независимых цикла
+PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.mixed.xml
+
+# ошибка: пакета Z нет в описании графа
+PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.missing.xml
+
+# граф реального локального Maven-репозитория
+PYTHONPATH=src python src/depviz16/__main__.py --config config.local.xml
+```
+
+### Пример вывода
+
+```console
+$ PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/config.cycle.xml
+Конфигурация:
+  package_name: A
+  repo_url: examples/test_graphs/cycle.txt
+  test_mode: true
+  output_image: graph.png
+Прямые зависимости 'A':
+  B
+  D
+Граф зависимостей 'A':
+  пакетов: 4
+  связей: 4
+  порядок обхода DFS: A -> B -> C -> D
+  зависимости:
+    A -> B, D
+    B -> C
+    C -> A
+    D -> (нет)
+Циклические зависимости:
+  A -> B -> C -> A
+```
+
+### Тесты
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -v
+```

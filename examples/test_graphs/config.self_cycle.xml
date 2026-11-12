@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <package_name>A</package_name>
+    <repo_url>examples/test_graphs/self_cycle.txt</repo_url>
+    <test_mode>true</test_mode>
+    <output_image>graph.png</output_image>
+</configuration>
