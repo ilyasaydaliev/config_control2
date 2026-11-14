@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <package_name>com.squareup.okhttp3:okhttp</package_name>
+    <repo_url>https://repo1.maven.org/maven2/</repo_url>
+    <test_mode>false</test_mode>
+    <package_version>4.12.0</package_version>
+    <output_image>graph.png</output_image>
+</configuration>
