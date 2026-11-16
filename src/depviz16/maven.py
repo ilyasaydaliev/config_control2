@@ -13,13 +13,14 @@ system и import, а также optional-зависимости пропуска
 
 import os
 import re
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as etree
 import urllib.error
 import urllib.request
 
 POM_FILENAME = "pom.xml"
 MAVEN_POM_SUFFIX = ".pom"
 GROUP_SEP = "."
+PACKAGE_PARTS = 2
 DEPENDENCY_TAG = "dependency"
 DEPENDENCIES_TAG = "dependencies"
 DEPENDENCY_MANAGEMENT_TAG = "dependencyManagement"
@@ -41,7 +42,7 @@ class MavenError(Exception):
 def split_package(package):
     """Разбить 'groupId:artifactId' на (group_id, artifact_id)."""
     parts = package.split(":")
-    if len(parts) != 2 or not all(parts):
+    if len(parts) != PACKAGE_PARTS or not all(parts):
         raise MavenError(
             "имя пакета '{}': ожидался формат "
             "groupId:artifactId".format(package)
@@ -103,8 +104,8 @@ def local_pom_text(repo_path, group_id, artifact_id):
 def extract_root(pom_text, url):
     """Разобрать XML-текст pom.xml и вернуть корневой элемент."""
     try:
-        return ET.fromstring(pom_text)
-    except ET.ParseError as error:
+        return etree.fromstring(pom_text)
+    except etree.ParseError as error:
         raise MavenError(
             "pom-файл '{}': ошибка XML-синтаксиса ({})".format(url, error)
         ) from error

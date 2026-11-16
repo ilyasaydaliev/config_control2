@@ -9,7 +9,7 @@
     * reverse_package — пакет, для которого ищутся обратные зависимости.
 """
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as etree
 
 CONFIG_ROOT = "configuration"
 REQUIRED_KEYS = ("package_name", "repo_url", "test_mode", "output_image")
@@ -81,27 +81,34 @@ def _require_text(element, key):
     return text
 
 
-def load_config(path):
-    """Загрузить конфигурацию из XML-файла и вернуть AppConfig."""
+def _read_root(path):
+    """Разобрать XML-файл и проверить корневой элемент."""
     try:
-        tree = ET.parse(path)
+        tree = etree.parse(path)
     except OSError as error:
         raise ConfigError(
-            "файл конфигурации '{}': {}".format(path, error.strerror or error)
+            "файл конфигурации '{}': {}".format(
+                path, error.strerror or error
+            )
         ) from error
-    except ET.ParseError as error:
+    except etree.ParseError as error:
         raise ConfigError(
             "файл конфигурации '{}': ошибка XML-синтаксиса ({})".format(
                 path, error
             )
         ) from error
-
     root = tree.getroot()
     if root.tag != CONFIG_ROOT:
         raise ConfigError(
-            "корневой элемент '{}', ожидался '{}'".format(root.tag, CONFIG_ROOT)
+            "корневой элемент '{}', ожидался '{}'".format(
+                root.tag, CONFIG_ROOT
+            )
         )
+    return root
 
+
+def _read_required(root):
+    """Прочитать обязательные параметры конфигурации."""
     values = {}
     for key in REQUIRED_KEYS:
         element = root.find(key)
@@ -110,34 +117,38 @@ def load_config(path):
                 "параметр '{}': отсутствует в конфигурации".format(key)
             )
         values[key] = _require_text(element, key)
+    return values
 
-    version = None
-    version_element = root.find(VERSION_KEY)
-    if version_element is not None:
-        version = _require_text(version_element, VERSION_KEY)
 
-    test_mode = parse_bool(values["test_mode"], "test_mode")
-    reverse_dependencies = False
-    reverse_element = root.find(REVERSE_MODE_KEY)
-    if reverse_element is not None:
-        reverse_dependencies = parse_bool(
-            _require_text(reverse_element, REVERSE_MODE_KEY),
-            REVERSE_MODE_KEY,
-        )
+def _read_optional_text(root, key):
+    """Прочитать необязательный текстовый параметр или вернуть None."""
+    element = root.find(key)
+    if element is None:
+        return None
+    return _require_text(element, key)
 
-    reverse_package = None
-    reverse_package_element = root.find(REVERSE_PACKAGE_KEY)
-    if reverse_package_element is not None:
-        reverse_package = _require_text(
-            reverse_package_element, REVERSE_PACKAGE_KEY
-        )
 
+def _parse_reverse(root):
+    """Прочитать параметры режима обратных зависимостей."""
+    mode_text = _read_optional_text(root, REVERSE_MODE_KEY)
+    enabled = False
+    if mode_text is not None:
+        enabled = parse_bool(mode_text, REVERSE_MODE_KEY)
+    package = _read_optional_text(root, REVERSE_PACKAGE_KEY)
+    return enabled, package
+
+
+def load_config(path):
+    """Загрузить конфигурацию из XML-файла и вернуть AppConfig."""
+    root = _read_root(path)
+    values = _read_required(root)
+    reverse_dependencies, reverse_package = _parse_reverse(root)
     return AppConfig(
         package_name=values["package_name"],
         repo_url=values["repo_url"],
-        test_mode=test_mode,
+        test_mode=parse_bool(values["test_mode"], "test_mode"),
         output_image=values["output_image"],
-        package_version=version,
+        package_version=_read_optional_text(root, VERSION_KEY),
         reverse_dependencies=reverse_dependencies,
         reverse_package=reverse_package,
     )

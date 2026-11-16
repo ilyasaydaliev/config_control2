@@ -21,13 +21,51 @@ src/depviz16/          исходный код
   __main__.py          точка входа
   cli.py               разбор аргументов, сценарий запуска
   config.py            XML-конфигурация приложения
+  graph.py             граф зависимостей, DFS и циклы
   maven.py             получение зависимостей из pom.xml
   output.py            функции вывода
+  visual.py            экспорт в D2 и рендер PNG
 tests/                 модульные тесты (unittest)
-examples/              локальный файловый репозиторий Maven
+examples/              локальный репозиторий Maven и тестовые графы
+run.bat                запуск на Windows
+run.sh                 запуск в bash
 config.xml             конфигурация по умолчанию (Maven Central)
 config.local.xml       конфигурация локального репозитория
 ```
+
+Быстрый запуск:
+
+```bash
+# Windows
+run.bat --config config.xml
+
+# bash
+./run.sh --config config.xml
+
+# без скрипта
+PYTHONPATH=src python src/depviz16/__main__.py --config config.xml
+```
+
+## Модули и функции
+
+* `config.py` — `load_config()` читает XML, `AppConfig` хранит
+  параметры, `parse_bool()` проверяет булевы значения.
+* `maven.py` — `get_direct_dependencies()` получает прямые зависимости,
+  `extract_dependencies()` разбирает POM, `package_url()` строит URL.
+* `graph.py` — `iterative_dfs()` обходит граф без рекурсии,
+  `find_cycles()` ищет циклы, `build_test_graph()` читает тестовый
+  граф, `build_repository_graph()` строит граф Maven,
+  `find_reverse_dependencies()` ищет обратные зависимости.
+* `visual.py` — `to_d2()` формирует D2, `render_png()` вызывает `d2`,
+  `export_graph()` сохраняет оба файла.
+* `output.py` — печать конфигурации, зависимостей, графа, циклов,
+  обратных зависимостей и путей визуализации.
+* `cli.py` — `main()` разбирает аргументы и запускает сценарий,
+  `run()` выполняет этапы 1–5.
+
+Настройки задаются в XML: обязательные `package_name`, `repo_url`,
+`test_mode`, `output_image`; необязательные `package_version`,
+`reverse_dependencies`, `reverse_package`.
 
 ## Этап 1. Минимальный прототип с конфигурацией
 

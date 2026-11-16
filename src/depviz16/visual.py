@@ -11,6 +11,7 @@ import subprocess
 
 D2_EXTENSION = ".d2"
 RENDER_TIMEOUT_SECONDS = 120
+SUCCESS_EXIT_CODE = 0
 D2_ENV = "D2_BINARY"
 D2_EXECUTABLE = "d2.exe" if os.name == "nt" else "d2"
 
@@ -119,7 +120,7 @@ def render_png(d2_path, png_path, binary=None):
         raise VisualError(
             "не удалось запустить d2: {}".format(error)
         ) from error
-    if completed.returncode != 0:
+    if completed.returncode != SUCCESS_EXIT_CODE:
         message = (completed.stderr or completed.stdout).strip()
         raise VisualError(
             "d2 завершился с ошибкой: {}".format(message)
