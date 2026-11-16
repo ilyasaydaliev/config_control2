@@ -1,0 +1,21 @@
+direction: right
+
+n0: "com.squareup.okhttp3:okhttp"
+n1: "com.squareup.okio:okio"
+n2: "com.squareup.okio:okio-jvm"
+n3: "org.jetbrains.kotlin:kotlin-stdlib-common"
+n4: "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+n5: "org.jetbrains.kotlin:kotlin-stdlib"
+n6: "org.jetbrains:annotations"
+n7: "org.jetbrains.kotlin:kotlin-stdlib-jdk7"
+
+n0 -> n1
+n0 -> n4
+n1 -> n2
+n2 -> n3
+n2 -> n4
+n4 -> n5
+n4 -> n7
+n5 -> n3
+n5 -> n6
+n7 -> n5

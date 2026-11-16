@@ -256,3 +256,69 @@ $ PYTHONPATH=src python src/depviz16/__main__.py \
 ```bash
 PYTHONPATH=src python -m unittest discover -s tests -v
 ```
+
+## Этап 5. Визуализация
+
+### Нововведения этапа
+
+* модуль `visual.py`: формирование текстового представления графа на
+  языке D2 и рендер PNG;
+* D2-файл создаётся собственным кодом: узлы получают идентификаторы
+  `n0`, `n1`, ... и подписи с полными координатами пакетов, рёбра
+  повторяют связи графа;
+* PNG рендерится консольным `d2`. Рендерер ищется в `PATH`, в
+  переменной `D2_BINARY` или в `tools/d2.exe`;
+* имя PNG берётся из `output_image`, D2-файл создаётся рядом с тем же
+  именем и расширением `.d2`;
+* для демонстрации добавлены конфигурации трёх пакетов:
+  `config.visual.okhttp.xml`, `config.visual.commons-text.xml`,
+  `config.visual.commons-configuration.xml`.
+
+### Запуск
+
+```bash
+# okhttp: 8 пакетов, 10 связей
+PYTHONPATH=src python src/depviz16/__main__.py --config config.visual.okhttp.xml
+
+# commons-text: 2 пакета
+PYTHONPATH=src python src/depviz16/__main__.py --config config.visual.commons-text.xml
+
+# commons-configuration2: 4 пакета
+PYTHONPATH=src python src/depviz16/__main__.py --config config.visual.commons-configuration.xml
+```
+
+Результаты сохраняются в `output/` (каталог исключён из git):
+
+```text
+output/okhttp.d2
+output/okhttp.png
+output/commons-text.d2
+output/commons-text.png
+output/commons-configuration2.d2
+output/commons-configuration2.png
+```
+
+Если `d2` не установлен, положите бинарник в `tools/d2.exe` или задайте
+`D2_BINARY`. Примеры D2-файлов сохранены в `examples/visual/`.
+
+### Сравнение с Maven
+
+Для `okhttp 4.12.0` выполнено сравнение с `mvn dependency:tree`
+(Maven 3.9.11). Исходное дерево и разбор расхождений:
+
+```text
+examples/visual/maven-dependency-tree.txt
+examples/visual/comparison.md
+```
+
+Состав зависимостей совпадает: 8 модулей и 10 уникальных рёбер. Maven
+дополнительно показывает корневой проект-обёртку, версии модулей и
+подавляет повторные поддеревья; наш граф хранит все уникальные рёбра.
+Maven также выполняет mediation версий и exclusions, которые в парсере
+не реализованы.
+
+### Тесты
+
+```bash
+PYTHONPATH=src python -m unittest discover -s tests -v
+```

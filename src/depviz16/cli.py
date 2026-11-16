@@ -21,7 +21,9 @@ from depviz16.output import (
     print_direct_dependencies,
     print_graph,
     print_reverse_dependencies,
+    print_visualization,
 )
+from depviz16.visual import VisualError, export_graph
 
 
 class CliError(Exception):
@@ -46,6 +48,8 @@ def run(config):
     Этап 2: вывод всех прямых зависимостей заданного пакета.
     Этап 3: построение графа зависимостей обходом DFS без рекурсии,
     поиск циклов и вывод порядка обхода.
+    Этап 4: вывод обратных зависимостей заданного пакета.
+    Этап 5: экспорт графа в D2 и рендер PNG.
     """
     print_config(config)
     try:
@@ -66,6 +70,12 @@ def run(config):
             print("Ошибка: {}".format(error))
             return 1
         print_reverse_dependencies(target, reverse)
+    try:
+        d2_path, png_path = export_graph(graph, config.output_image)
+    except VisualError as error:
+        print("Ошибка визуализации: {}".format(error))
+        return 1
+    print_visualization(d2_path, png_path)
     return 0
 
 

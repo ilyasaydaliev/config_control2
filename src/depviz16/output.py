@@ -57,3 +57,10 @@ def print_reverse_dependencies(package, deps):
         return
     for dep in deps:
         print("  {}".format(dep))
+
+
+def print_visualization(d2_path, png_path):
+    """Вывести пути сохранённых файлов визуализации (этап 5)."""
+    print("Визуализация:")
+    print("  D2: {}".format(d2_path))
+    print("  PNG: {}".format(png_path))
