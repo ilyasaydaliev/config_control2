@@ -4,7 +4,9 @@
     * package_name — имя анализируемого пакета (groupId:artifactId);
     * repo_url — URL-адрес репозитория или путь к файлу тестового репозитория;
     * test_mode — режим работы с тестовым репозиторием;
-    * output_image — имя сгенерированного файла с изображением графа.
+    * output_image — имя сгенерированного файла с изображением графа;
+    * reverse_dependencies — режим вывода обратных зависимостей;
+    * reverse_package — пакет, для которого ищутся обратные зависимости.
 """
 
 import xml.etree.ElementTree as ET
@@ -12,6 +14,8 @@ import xml.etree.ElementTree as ET
 CONFIG_ROOT = "configuration"
 REQUIRED_KEYS = ("package_name", "repo_url", "test_mode", "output_image")
 VERSION_KEY = "package_version"
+REVERSE_MODE_KEY = "reverse_dependencies"
+REVERSE_PACKAGE_KEY = "reverse_package"
 
 
 class ConfigError(Exception):
@@ -23,13 +27,16 @@ class AppConfig:
 
     def __init__(
         self, package_name, repo_url, test_mode, output_image,
-        package_version=None,
+        package_version=None, reverse_dependencies=False,
+        reverse_package=None,
     ):
         self.package_name = package_name
         self.repo_url = repo_url
         self.test_mode = test_mode
         self.output_image = output_image
         self.package_version = package_version
+        self.reverse_dependencies = reverse_dependencies
+        self.reverse_package = reverse_package
 
     def as_pairs(self):
         """Вернуть параметры в виде пар ключ-значение для отображения."""
@@ -41,6 +48,14 @@ class AppConfig:
         ]
         if self.package_version is not None:
             pairs.append((VERSION_KEY, self.package_version))
+        pairs.append(
+            (
+                REVERSE_MODE_KEY,
+                str(self.reverse_dependencies).lower(),
+            )
+        )
+        if self.reverse_package is not None:
+            pairs.append((REVERSE_PACKAGE_KEY, self.reverse_package))
         return pairs
 
 
@@ -102,10 +117,27 @@ def load_config(path):
         version = _require_text(version_element, VERSION_KEY)
 
     test_mode = parse_bool(values["test_mode"], "test_mode")
+    reverse_dependencies = False
+    reverse_element = root.find(REVERSE_MODE_KEY)
+    if reverse_element is not None:
+        reverse_dependencies = parse_bool(
+            _require_text(reverse_element, REVERSE_MODE_KEY),
+            REVERSE_MODE_KEY,
+        )
+
+    reverse_package = None
+    reverse_package_element = root.find(REVERSE_PACKAGE_KEY)
+    if reverse_package_element is not None:
+        reverse_package = _require_text(
+            reverse_package_element, REVERSE_PACKAGE_KEY
+        )
+
     return AppConfig(
         package_name=values["package_name"],
         repo_url=values["repo_url"],
         test_mode=test_mode,
         output_image=values["output_image"],
         package_version=version,
+        reverse_dependencies=reverse_dependencies,
+        reverse_package=reverse_package,
     )

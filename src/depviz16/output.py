@@ -47,3 +47,13 @@ def print_cycles(graph):
         return
     for cycle in graph.cycles:
         print("  {}".format(" -> ".join(cycle)))
+
+
+def print_reverse_dependencies(package, deps):
+    """Вывести пакеты, зависящие от заданного (этап 4)."""
+    print("Обратные зависимости '{}':".format(package))
+    if not deps:
+        print("  не обнаружены")
+        return
+    for dep in deps:
+        print("  {}".format(dep))

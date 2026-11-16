@@ -12,6 +12,7 @@ from depviz16.graph import (
     GraphError,
     build_repository_graph,
     build_test_graph,
+    find_reverse_dependencies,
 )
 from depviz16.maven import MavenError
 from depviz16.output import (
@@ -19,6 +20,7 @@ from depviz16.output import (
     print_cycles,
     print_direct_dependencies,
     print_graph,
+    print_reverse_dependencies,
 )
 
 
@@ -56,6 +58,14 @@ def run(config):
     )
     print_graph(graph)
     print_cycles(graph)
+    if config.reverse_dependencies:
+        target = config.reverse_package or config.package_name
+        try:
+            reverse = find_reverse_dependencies(graph, target)
+        except GraphError as error:
+            print("Ошибка: {}".format(error))
+            return 1
+        print_reverse_dependencies(target, reverse)
     return 0
 
 

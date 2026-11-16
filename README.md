@@ -198,6 +198,59 @@ $ PYTHONPATH=src python src/depviz16/__main__.py --config examples/test_graphs/c
   A -> B -> C -> A
 ```
 
+## Этап 4. Дополнительные операции
+
+### Нововведения этапа
+
+* необязательные параметры конфигурации:
+  * `reverse_dependencies` — включает режим вывода обратных зависимостей
+    (`true/false`, по умолчанию `false`);
+  * `reverse_package` — пакет, для которого ищутся обратные зависимости
+    (по умолчанию совпадает с `package_name`);
+* функция `reverse_adjacency()` строит обратный граф: ребро
+  `A -> B` превращается в `B -> A`;
+* функция `find_reverse_dependencies()` запускает итеративный DFS этапа 3
+  по обратному графу и находит все пакеты, которые прямо или косвенно
+  зависят от заданного; сам пакет из результата исключается;
+* результат выводится отдельным разделом после графа и циклов.
+
+Обратные зависимости ищутся в уже собранном графе. В тестовом режиме
+это граф, достижимый из `package_name`, поэтому `reverse_package` должен
+входить в него. В режиме Maven это граф, построенный от `package_name`;
+пакеты, которые не встречаются в этом обходе, инструменту неизвестны.
+
+### Запуск
+
+```bash
+# ромб: кто зависит от D (прямо и косвенно)
+PYTHONPATH=src python src/depviz16/__main__.py \
+  --config examples/test_graphs/config.reverse.diamond.xml
+
+# цикл: кто зависит от C
+PYTHONPATH=src python src/depviz16/__main__.py \
+  --config examples/test_graphs/config.reverse.cycle.xml
+
+# цепочка: кто зависит от C
+PYTHONPATH=src python src/depviz16/__main__.py \
+  --config examples/test_graphs/config.reverse.chain.xml
+
+# реальный Maven-пакет: кто зависит от okio
+PYTHONPATH=src python src/depviz16/__main__.py \
+  --config config.depend.reverse.xml
+```
+
+### Пример вывода
+
+```console
+$ PYTHONPATH=src python src/depviz16/__main__.py \
+    --config examples/test_graphs/config.reverse.diamond.xml
+...
+Обратные зависимости 'D':
+  B
+  A
+  C
+```
+
 ### Тесты
 
 ```bash

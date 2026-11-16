@@ -208,3 +208,28 @@ def build_repository_graph(package, repo_url, version=None):
     return DependencyGraph(
         package, adjacency, order, find_cycles(adjacency)
     )
+
+
+def reverse_adjacency(adjacency):
+    """Построить обратный граф: пакет -> пакеты, зависящие от него."""
+    reversed_graph = {node: [] for node in adjacency}
+    for node, deps in adjacency.items():
+        for dep in deps:
+            reversed_graph.setdefault(dep, []).append(node)
+    return reversed_graph
+
+
+def find_reverse_dependencies(graph, package):
+    """Найти пакеты, прямо или косвенно зависящие от заданного.
+
+    Используется итеративный DFS этапа 3 по обратному графу.
+    """
+    if package not in graph.adjacency:
+        raise GraphError(
+            "пакет '{}' отсутствует в графе зависимостей".format(package)
+        )
+    reversed_graph = reverse_adjacency(graph.adjacency)
+    _, order = iterative_dfs(
+        package, lambda node: reversed_graph.get(node, [])
+    )
+    return [node for node in order if node != package]
